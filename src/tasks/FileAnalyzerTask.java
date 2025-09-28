@@ -18,9 +18,7 @@ class FileStats {
 class FileAnalyzer {
 
     public FileStats analyze(String filename) {
-        try {
-            BufferedReader reader = new BufferedReader(new FileReader(filename));
-
+        try (BufferedReader reader = new BufferedReader(new FileReader(filename))){
             int lineCount = 0;
             int wordCount = 0;
             int charCount = 0;

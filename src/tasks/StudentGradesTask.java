@@ -37,8 +37,7 @@ class StudentGrades {
     }
 
     public void analyze(String filename) {
-        try {
-            BufferedReader reader = new BufferedReader(new FileReader(filename));
+        try (BufferedReader reader = new BufferedReader(new FileReader(filename))){
             String line;
 
             while ((line = reader.readLine()) != null) {
