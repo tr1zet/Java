@@ -5,16 +5,9 @@ import java.util.*;
 public class Task1 {
     public static void execute() {
         System.out.println("\n ЗАДАНИЕ 1 ");
-
-        // Создаем массив из N случайных чисел
-        int n = 10;
-        Integer[] array = new Integer[n];
-        Random random = new Random();
-        for (int i = 0; i < n; i++) {
-            array[i] = random.nextInt(101); // 0-100
-        }
+        Integer[] array = {10,7, 23, 56, 99, 3, 55, 91, 23, 33};
+        // Вывод исходного массива
         System.out.println("1. Исходный массив: " + Arrays.toString(array));
-
         // Создаем список на основе массива
         List<Integer> list = new ArrayList<>(Arrays.asList(array));
         System.out.println("2. Список: " + list);
@@ -41,13 +34,7 @@ public class Task1 {
         System.out.println("7. Только уникальные элементы: " + uniqueList);
 
         // Оставляем только дублирующиеся элементы
-        List<Integer> duplicates = new ArrayList<>();
-        Set<Integer> seen = new HashSet<>();
-        for (Integer num : list) {
-            if (!seen.add(num)) {
-                duplicates.add(num);
-            }
-        }
+        List<Integer> duplicates = findDuplicates(list);
         System.out.println("8. Только дублирующиеся элементы: " + duplicates);
 
         // Получаем массив из списка
@@ -55,10 +42,31 @@ public class Task1 {
         System.out.println("9. Массив из списка: " + Arrays.toString(newArray));
 
         // Подсчет вхождений каждого числа
+        Map<Integer, Integer> frequencyMap = countFrequency(list);
+        System.out.println("10. Частота вхождений: " + frequencyMap);
+    }
+
+    // Метод для поиска дублирующихся элементов
+    private static List<Integer> findDuplicates(List<Integer> list) {
+        List<Integer> duplicates = new ArrayList<>();
+        Set<Integer> seen = new HashSet<>();
+        Set<Integer> duplicatesSet = new HashSet<>();
+
+        for (Integer num : list) {
+            if (!seen.add(num)) {
+                duplicatesSet.add(num);
+            }
+        }
+        duplicates.addAll(duplicatesSet);
+        return duplicates;
+    }
+
+    // Метод для подсчета частоты вхождений
+    private static Map<Integer, Integer> countFrequency(List<Integer> list) {
         Map<Integer, Integer> frequencyMap = new HashMap<>();
         for (Integer num : list) {
             frequencyMap.put(num, frequencyMap.getOrDefault(num, 0) + 1);
         }
-        System.out.println("10. Частота вхождений: " + frequencyMap);
+        return frequencyMap;
     }
 }
