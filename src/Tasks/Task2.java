@@ -1,6 +1,7 @@
 package src.Tasks;
 
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 public class Task2 {
     public static void execute() {
@@ -37,6 +38,9 @@ class PrimesGenerator implements Iterator<Integer> {
 
     @Override
     public Integer next() {
+        if (!hasNext()) {
+            throw new NoSuchElementException("Достигнут лимит простых чисел");
+        }
         while (!isPrime(current)) {
             current++;
         }
