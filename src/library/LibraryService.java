@@ -18,28 +18,27 @@ public class LibraryService {
     }
 
     private void loadData() {
-        FileReader reader = null;
-        try {
-            // Пробуем разные пути к файлу
-            String[] possiblePaths = {"books.json"};
+        // Пробуем разные пути к файлу
+        String[] possiblePaths = {"books.json"};
+        String foundPath = null;
+        File file = null;
 
-            String foundPath = null;
-
-            // Ищем файл по всем возможным путям
-            for (String path : possiblePaths) {
-                File file = new File(path);
-                if (file.exists()) {
-                    reader = new FileReader(file);
-                    foundPath = path;
-                    System.out.println("Файл найден: " + file.getAbsolutePath());
-                    break;
-                }
+        // Ищем файл по всем возможным путям
+        for (String path : possiblePaths) {
+            file = new File(path);
+            if (file.exists()) {
+                foundPath = path;
+                System.out.println("Файл найден: " + file.getAbsolutePath());
+                break;
             }
+        }
 
-            if (reader == null) {
-                throw new RuntimeException("Файл books.json не найден.");
-            }
+        if (file == null || !file.exists()) {
+            throw new RuntimeException("Файл books.json не найден/");
+        }
 
+        // Используем try-with-resources для автоматического закрытия FileReader
+        try (FileReader reader = new FileReader(file)) {
             // Загружаем данные через Gson
             Gson gson = new Gson();
             Type visitorListType = new TypeToken<List<Visitor>>(){}.getType();
@@ -50,15 +49,6 @@ public class LibraryService {
 
         } catch (Exception e) {
             throw new RuntimeException("Ошибка загрузки данных: " + e.getMessage());
-        } finally {
-            // Закрываем reader в блоке finally
-            if (reader != null) {
-                try {
-                    reader.close();
-                } catch (Exception e) {
-                    System.out.println("Ошибка при закрытии файла: " + e.getMessage());
-                }
-            }
         }
     }
 
