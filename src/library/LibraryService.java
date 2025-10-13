@@ -5,7 +5,7 @@ import com.google.gson.reflect.TypeToken;
 import java.io.File;
 import java.io.FileReader;
 import java.lang.reflect.Type;
-import java.util.Arrays;
+
 import java.util.Comparator;
 import java.util.List;
 import java.util.OptionalDouble;
@@ -18,12 +18,12 @@ public class LibraryService {
     }
 
     private void loadData() {
-        // Пробуем разные пути к файлу
+
         String[] possiblePaths = {"books.json"};
         String foundPath = null;
         File file = null;
 
-        // Ищем файл по всем возможным путям
+
         for (String path : possiblePaths) {
             file = new File(path);
             if (file.exists()) {
