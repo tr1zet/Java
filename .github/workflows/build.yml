@@ -16,7 +16,5 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: Compile java files
-        run: |
-          mkdir -p classes
-          javac -d classes $(find ./src -name "*.java")
+      - name: Build with Maven
+        run: mvn compile
