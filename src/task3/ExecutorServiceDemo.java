@@ -1,6 +1,6 @@
 package task3;
 
-import java.util.Random;
+import java.security.SecureRandom;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -12,7 +12,7 @@ public class ExecutorServiceDemo {
         System.out.println("Задание 3: ExecutorService ");
         System.out.println();
         ShoeWarehouse warehouse = new ShoeWarehouse(5, 3);
-        Random random = new Random();
+        SecureRandom random = new SecureRandom();
         ExecutorService producerExecutor = Executors.newFixedThreadPool(2);
         for (int p = 1; p <= 2; p++) {
             final int producerId = p;
