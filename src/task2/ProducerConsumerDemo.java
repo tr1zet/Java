@@ -1,6 +1,7 @@
 package task2;
 
-import java.util.Random;
+import java.security.SecureRandom;
+
 
 
 public class ProducerConsumerDemo {
@@ -11,7 +12,7 @@ public class ProducerConsumerDemo {
 
 
         ShoeWarehouse warehouse = new ShoeWarehouse(7);
-        Random random = new Random();
+        SecureRandom random = new SecureRandom();
 
 
         Thread producerThread = new Thread(() -> {
