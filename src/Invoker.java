@@ -15,7 +15,6 @@ public class Invoker {
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 

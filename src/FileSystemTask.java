@@ -28,7 +28,6 @@ public class FileSystemTask {
 
         } catch (IOException e) {
             System.err.println("Ошибка при работе с файловой системой: " + e.getMessage());
-            e.printStackTrace();
         }
     }
 
