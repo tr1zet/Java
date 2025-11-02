@@ -4,51 +4,79 @@ public class Invoker {
     public void invokeAnnotatedMethods() {
         try {
             MyClass myClass = new MyClass("TestObject", 5);
-            Class<?> clazz = myClass.getClass();
-            Method[] methods = clazz.getDeclaredMethods();
+            Method[] methods = myClass.getClass().getDeclaredMethods();
 
             System.out.println("ВЫЗОВ АННОТИРОВАННЫХ МЕТОДОВ ");
 
             for (Method method : methods) {
-                boolean isProtected = java.lang.reflect.Modifier.isProtected(method.getModifiers());
-                boolean isPrivate = java.lang.reflect.Modifier.isPrivate(method.getModifiers());
-
-                if ((isProtected || isPrivate) && method.isAnnotationPresent(Repeat.class)) {
-                    Repeat repeatAnnotation = method.getAnnotation(Repeat.class);
-                    int times = repeatAnnotation.times();
-
-                    System.out.println("\nМетод: " + method.getName());
-                    System.out.println("Модификатор: " + (isProtected ? "protected" : "private"));
-                    System.out.println("Количество вызовов: " + times);
-
-                    method.setAccessible(true);
-
-                    for (int i = 0; i < times; i++) {
-                        System.out.print("Вызов " + (i + 1) + ": ");
-
-                        // Обрабатываем параметры методов
-                        Class<?>[] paramTypes = method.getParameterTypes();
-                        Object[] params = new Object[paramTypes.length];
-
-                        // Заполняем параметры значениями по умолчанию
-                        for (int j = 0; j < paramTypes.length; j++) {
-                            if (paramTypes[j] == String.class) {
-                                params[j] = "param" + (j + 1);
-                            } else if (paramTypes[j] == int.class) {
-                                params[j] = (j + 1) * 10;
-                            }
-                        }
-
-                        Object result = method.invoke(myClass, params);
-                        if (result != null) {
-                            System.out.println("Результат: " + result);
-                        }
-                    }
+                if (shouldInvokeMethod(method)) {
+                    invokeMethodWithRepeat(method, myClass);
                 }
             }
 
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    private boolean shouldInvokeMethod(Method method) {
+        boolean isProtected = java.lang.reflect.Modifier.isProtected(method.getModifiers());
+        boolean isPrivate = java.lang.reflect.Modifier.isPrivate(method.getModifiers());
+        return (isProtected || isPrivate) && method.isAnnotationPresent(Repeat.class);
+    }
+
+    private void invokeMethodWithRepeat(Method method, MyClass target) throws Exception {
+        Repeat repeatAnnotation = method.getAnnotation(Repeat.class);
+        int times = repeatAnnotation.times();
+
+        printMethodInfo(method, times);
+        method.setAccessible(true);
+
+        for (int i = 0; i < times; i++) {
+            invokeSingleMethodCall(method, target, i + 1);
+        }
+    }
+
+    private void printMethodInfo(Method method, int times) {
+        boolean isProtected = java.lang.reflect.Modifier.isProtected(method.getModifiers());
+
+        System.out.println("\nМетод: " + method.getName());
+        System.out.println("Модификатор: " + (isProtected ? "protected" : "private"));
+        System.out.println("Количество вызовов: " + times);
+    }
+
+    private void invokeSingleMethodCall(Method method, MyClass target, int callNumber) throws Exception {
+        System.out.print("Вызов " + callNumber + ": ");
+
+        Object[] params = prepareMethodParameters(method);
+        Object result = method.invoke(target, params);
+
+        printResultIfExists(result);
+    }
+
+    private Object[] prepareMethodParameters(Method method) {
+        Class<?>[] paramTypes = method.getParameterTypes();
+        Object[] params = new Object[paramTypes.length];
+
+        for (int i = 0; i < paramTypes.length; i++) {
+            params[i] = getDefaultParameterValue(paramTypes[i], i);
+        }
+
+        return params;
+    }
+
+    private Object getDefaultParameterValue(Class<?> paramType, int index) {
+        if (paramType == String.class) {
+            return "param" + (index + 1);
+        } else if (paramType == int.class) {
+            return (index + 1) * 10;
+        }
+        return null;
+    }
+
+    private void printResultIfExists(Object result) {
+        if (result != null) {
+            System.out.println("Результат: " + result);
         }
     }
 }
