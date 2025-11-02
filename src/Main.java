@@ -1,47 +1,83 @@
-package src;
-
-import src.Tasks.Task1;
-import src.Tasks.Task2;
-import src.Tasks.Task3;
-import src.Tasks.Task4;
-import src.Tasks.Task5;
-import src.utils.Input;
+import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
         while (true) {
-            System.out.println("\n  МЕНЮ ВЫБОРА ЗАДАНИЙ    ");
-            System.out.println("1. Работа с Collections  ");
-            System.out.println("2. Генератор простых чисел ");
-            System.out.println("3. Работа с Human  ");
-            System.out.println("4. Частота слов в тексте ");
-            System.out.println("5. Обмен ключей и значений в Map ");
-            System.out.println("0. Выход");
+            printMenu();
+            System.out.print("Выберите действие: ");
 
-            int choice = Input.getIntInput("Выберите задание: ");
+            if (scanner.hasNextInt()) {
+                int choice = scanner.nextInt();
+                scanner.nextLine(); // consume newline
 
-            switch (choice) {
-                case 1:
-                    Task1.execute();
-                    break;
-                case 2:
-                    Task2.execute();
-                    break;
-                case 3:
-                    Task3.execute();
-                    break;
-                case 4:
-                    Task4.execute();
-                    break;
-                case 5:
-                    Task5.execute();
-                    break;
-                case 0:
-                    System.out.println("Выход из программы...");
-                    return;
-                default:
-                    System.out.println("Неверный выбор! Попробуйте снова.");
+                switch (choice) {
+                    case 1:
+                        executeReflectionTask();
+                        break;
+                    case 2:
+                        executeFileSystemTask(scanner);
+                        break;
+                    case 3:
+                        executeBothTasks(scanner);
+                        break;
+                    case 0:
+                        System.out.println("Выход из программы...");
+                        scanner.close();
+                        return;
+                    default:
+                        System.out.println("Неверный выбор. Попробуйте снова.");
+                }
+            } else {
+                System.out.println("Пожалуйста, введите число.");
+                scanner.nextLine(); // clear invalid input
             }
+
+            System.out.println("\n" + "=".repeat(50) + "\n");
         }
+    }
+
+    private static void printMenu() {
+        System.out.println(" ГЛАВНОЕ МЕНЮ ");
+        System.out.println("1. Задание 1 - Рефлексия и аннотации");
+        System.out.println("2. Задание 2 - Работа с файловой системой");
+        System.out.println("3. Выполнить оба задания");
+        System.out.println("0. Выход");
+    }
+
+    private static void executeReflectionTask() {
+        System.out.println("\n--- Задание 1: Рефлексия и аннотации ---");
+        Invoker invoker = new Invoker();
+        invoker.invokeAnnotatedMethods();
+    }
+
+    private static void executeFileSystemTask(Scanner scanner) {
+        System.out.println("\n--- Задание 2: Работа с файловой системой ---");
+        System.out.print("Введите вашу фамилию: ");
+        String surname = scanner.nextLine();
+        System.out.print("Введите ваше имя: ");
+        String name = scanner.nextLine();
+
+        FileSystemTask fileTask = new FileSystemTask(surname, name);
+        fileTask.executeFileSystemTask();
+    }
+
+    private static void executeBothTasks(Scanner scanner) {
+        System.out.println("\n--- Выполнение обоих заданий ---");
+
+        // Задание 1
+        System.out.println("\n[ЗАДАНИЕ 1]");
+        executeReflectionTask();
+
+        // Задание 2
+        System.out.println("\n[ЗАДАНИЕ 2]");
+        System.out.print("Введите вашу фамилию: ");
+        String surname = scanner.nextLine();
+        System.out.print("Введите ваше имя: ");
+        String name = scanner.nextLine();
+
+        FileSystemTask fileTask = new FileSystemTask(surname, name);
+        fileTask.executeFileSystemTask();
     }
 }
