@@ -6,3 +6,4 @@ public class StudentDiscount implements DiscountStrategy {
         return price * 0.15;
     }
 }
+

@@ -47,3 +47,4 @@ public class Main {
         bird.eat();
     }
 }
+
