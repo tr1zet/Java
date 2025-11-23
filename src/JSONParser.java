@@ -3,6 +3,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import model.VisitorData;
 import java.io.FileReader;
+import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.List;
 
@@ -19,8 +20,11 @@ public class JSONParser {
             List<VisitorData> visitors = gson.fromJson(reader, listType);
             System.out.println("Успешно загружено " + visitors.size() + " посетителей из JSON файла");
             return visitors;
-        } catch (Exception e) {
+        } catch (IOException e) {
             System.out.println("Ошибка чтения JSON файла: " + e.getMessage());
+            return null;
+        } catch (Exception e) {
+            System.out.println("Ошибка парсинга JSON: " + e.getMessage());
             return null;
         }
     }

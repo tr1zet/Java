@@ -159,12 +159,15 @@ public class BookManager {
 
         // Добавляем посетителя
         VisitorData personalData = new VisitorData(name, surname, phone, subscribed, null);
-        addVisitor(personalData);
+        if (addVisitor(personalData)) {
+            System.out.println("Информация о посетителе добавлена успешно!");
+        }
 
         System.out.print("Сколько любимых книг хотите добавить? ");
         int bookCount = scanner.nextInt();
         scanner.nextLine(); // consume newline
 
+        int addedBooks = 0;
         for (int i = 0; i < bookCount; i++) {
             System.out.println("\nКнига " + (i + 1) + ":");
             System.out.print("Название: ");
@@ -184,11 +187,17 @@ public class BookManager {
             String publisher = scanner.nextLine();
 
             Book book = new Book(bookName, author, year, isbn, publisher, name);
-            addBook(book, name);
+            if (addBook(book, name)) {
+                addedBooks++;
+                System.out.println("Книга '" + bookName + "' добавлена успешно!");
+            } else {
+                System.out.println("Не удалось добавить книгу '" + bookName + "'");
+            }
         }
 
         // Выводим добавленные данные
         System.out.println("\n=== Добавленные данные ===");
+        System.out.println("Добавлено книг: " + addedBooks + " из " + bookCount);
         getVisitorByName(name);
         getBooksByVisitor(name);
     }
@@ -210,17 +219,23 @@ public class BookManager {
 
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setString(1, name);
-            ResultSet rs = pstmt.executeQuery();
+            try (ResultSet rs = pstmt.executeQuery()) {
 
-            System.out.println("\nИнформация о посетителе:");
-            while (rs.next()) {
-                Visitor visitor = new Visitor();
-                visitor.setId(rs.getInt("id"));
-                visitor.setName(rs.getString("name"));
-                visitor.setSurname(rs.getString("surname"));
-                visitor.setPhone(rs.getString("phone"));
-                visitor.setSubscribed(rs.getBoolean("subscribed"));
-                System.out.println(visitor);
+                System.out.println("\nИнформация о посетителе:");
+                boolean found = false;
+                while (rs.next()) {
+                    Visitor visitor = new Visitor();
+                    visitor.setId(rs.getInt("id"));
+                    visitor.setName(rs.getString("name"));
+                    visitor.setSurname(rs.getString("surname"));
+                    visitor.setPhone(rs.getString("phone"));
+                    visitor.setSubscribed(rs.getBoolean("subscribed"));
+                    System.out.println(visitor);
+                    found = true;
+                }
+                if (!found) {
+                    System.out.println("Посетитель с именем '" + name + "' не найден.");
+                }
             }
         } catch (SQLException e) {
             System.out.println("Ошибка получения данных: " + e.getMessage());
@@ -232,12 +247,18 @@ public class BookManager {
 
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setString(1, visitorName);
-            ResultSet rs = pstmt.executeQuery();
+            try (ResultSet rs = pstmt.executeQuery()) {
 
-            System.out.println("\nЛюбимые книги:");
-            while (rs.next()) {
-                Book book = resultSetToBook(rs);
-                System.out.println(book);
+                System.out.println("\nЛюбимые книги:");
+                boolean found = false;
+                while (rs.next()) {
+                    Book book = resultSetToBook(rs);
+                    System.out.println(book);
+                    found = true;
+                }
+                if (!found) {
+                    System.out.println("Книги для посетителя '" + visitorName + "' не найдены.");
+                }
             }
         } catch (SQLException e) {
             System.out.println("Ошибка получения данных: " + e.getMessage());
@@ -258,14 +279,14 @@ public class BookManager {
         }
     }
 
-    // Дополнительный метод для отображения всех посетителей
     public void showAllVisitors() {
         String sql = "SELECT * FROM visitors";
 
         try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
 
-            System.out.println("\n=== Все посетители ===");
+            System.out.println("\n Все посетители ");
+            int count = 0;
             while (rs.next()) {
                 Visitor visitor = new Visitor();
                 visitor.setId(rs.getInt("id"));
@@ -274,30 +295,85 @@ public class BookManager {
                 visitor.setPhone(rs.getString("phone"));
                 visitor.setSubscribed(rs.getBoolean("subscribed"));
                 System.out.println(visitor);
+                count++;
             }
+            System.out.println("Всего посетителей: " + count);
         } catch (SQLException e) {
             System.out.println("Ошибка получения данных: " + e.getMessage());
         }
     }
 
-    // Дополнительный метод для отображения всех книг
+
     public void showAllBooks() {
         String sql = "SELECT * FROM books";
 
         try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
 
-            System.out.println("\n=== Все книги ===");
+            System.out.println("\n Все книги ");
+            int count = 0;
             while (rs.next()) {
                 Book book = resultSetToBook(rs);
                 System.out.println(book);
+                count++;
             }
+            System.out.println("Всего книг: " + count);
         } catch (SQLException e) {
             System.out.println("Ошибка получения данных: " + e.getMessage());
         }
     }
 
+
+    public void findBooksByAuthor(String author) {
+        String sql = "SELECT * FROM books WHERE author LIKE ?";
+
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setString(1, "%" + author + "%");
+            try (ResultSet rs = pstmt.executeQuery()) {
+
+                System.out.println("\n=== Книги автора '" + author + "' ===");
+                int count = 0;
+                while (rs.next()) {
+                    Book book = resultSetToBook(rs);
+                    System.out.println(book);
+                    count++;
+                }
+                System.out.println("Найдено книг: " + count);
+            }
+        } catch (SQLException e) {
+            System.out.println("Ошибка поиска книг: " + e.getMessage());
+        }
+    }
+
+
+    public void showStatistics() {
+        String sqlBooks = "SELECT COUNT(*) as book_count FROM books";
+        String sqlVisitors = "SELECT COUNT(*) as visitor_count FROM visitors";
+        String sqlSubscribed = "SELECT COUNT(*) as subscribed_count FROM visitors WHERE subscribed = true";
+
+        try (Statement stmt = connection.createStatement();
+             ResultSet rsBooks = stmt.executeQuery(sqlBooks);
+             ResultSet rsVisitors = stmt.executeQuery(sqlVisitors);
+             ResultSet rsSubscribed = stmt.executeQuery(sqlSubscribed)) {
+
+            System.out.println("\n=== Статистика ===");
+            if (rsBooks.next()) {
+                System.out.println("Всего книг: " + rsBooks.getInt("book_count"));
+            }
+            if (rsVisitors.next()) {
+                System.out.println("Всего посетителей: " + rsVisitors.getInt("visitor_count"));
+            }
+            if (rsSubscribed.next()) {
+                System.out.println("Подписано на рассылку: " + rsSubscribed.getInt("subscribed_count"));
+            }
+        } catch (SQLException e) {
+            System.out.println("Ошибка получения статистики: " + e.getMessage());
+        }
+    }
+
     public void closeScanner() {
-        scanner.close();
+        if (scanner != null) {
+            scanner.close();
+        }
     }
 }

@@ -11,6 +11,7 @@ public class MusicManager {
     public void getAllMusic() {
         String sql = "SELECT * FROM music";
 
+        // Используем try-with-resources для Statement и ResultSet
         try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
 
@@ -29,6 +30,7 @@ public class MusicManager {
     public void getMusicWithoutMT() {
         String sql = "SELECT * FROM music WHERE LOWER(name) NOT LIKE '%m%' AND LOWER(name) NOT LIKE '%t%'";
 
+        // Используем try-with-resources для Statement и ResultSet
         try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
 
@@ -49,6 +51,7 @@ public class MusicManager {
         String maxIdSql = "SELECT MAX(id) as max_id FROM music";
         int newId = 1;
 
+        // Используем try-with-resources для Statement и ResultSet
         try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery(maxIdSql)) {
 
@@ -73,7 +76,7 @@ public class MusicManager {
         }
     }
 
-    // Дополнительный метод для проверки структуры таблицы
+
     public void showTableStructure() {
         String sql = "PRAGMA table_info(music)";
 
