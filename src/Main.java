@@ -1,101 +1,112 @@
-// Main.java
-import srp.*;
-import ocp.*;
-import lsp.*;
-import isp.*;
-import dip.*;
-
 import java.util.List;
+import java.util.Scanner;
+import model.VisitorData;
 
 public class Main {
     public static void main(String[] args) {
-        // ---------- S ----------
-        System.out.println("$$$$ SRP Demo $$$$");
-        ReportManager manager = new ReportManager(List.of(5, 10, 15, 20));
-        manager.generateReport();
+        DatabaseManager dbManager = new DatabaseManager();
 
-        // ---------- O ----------
-        System.out.println("\n$$$$ OCP Demo $$$$");
-        DiscountCalculator calculator = new DiscountCalculator();
-        System.out.println("Regular: " + calculator.calculateDiscount(new RegularDiscount(), 1000));
-        System.out.println("VIP: " + calculator.calculateDiscount(new VipDiscount(), 1000));
-        System.out.println("Super VIP: " + calculator.calculateDiscount(new SuperVipDiscount(), 1000));
-        System.out.println("Student: " + calculator.calculateDiscount(new StudentDiscount(), 1000));
-
-        // ---------- L ----------
-        System.out.println("\n$$$$ LSP Demo $$$$");
-        displayFlyingBird(new Sparrow());
-        displayNonFlyingBird(new Penguin());
-
-        System.out.println("\n$$$$ All birds eating $$$$");
-        displayBirdEating(new Sparrow());
-        displayBirdEating(new Penguin());
-
-        // ---------- I ----------
-        System.out.println("\n$$$$ ISP Demo $$$$");
-        PrintDevice oldPrinter = new OldPrinter("Amstrad PCW 8256;");
-        ScanDevice scanner = new Scanner(" Canon CanoScan LiDE 400");
-        MultiFunctionDevice modernPrinter = new ModernPrinter("Kyocera ECOSYS M2040dn");
-
-        System.out.println("1. Работа со старым принтером:");
-        System.out.println("Устройство: " + oldPrinter.getDeviceInfo());
-        oldPrinter.print("Важный договор");
-
-        System.out.println("\n2. Работа со сканером:");
-        System.out.println("Устройство: " + scanner.getDeviceInfo());
-        scanner.scan("Паспорт");
-
-        System.out.println("\n3. Работа с современным МФУ:");
-        System.out.println("Устройство: " + modernPrinter.getDeviceInfo());
-        modernPrinter.print("Отчет за квартал");
-        modernPrinter.scan("Документ");
-        modernPrinter.fax("Срочное сообщение");
-
-        System.out.println("\n4. Демонстрация полиморфизма:");
-        Machine[] devices = {oldPrinter, scanner, modernPrinter};
-        for (Machine device : devices) {
-            System.out.println(" - " + device.getDeviceInfo());
+        if (!dbManager.isConnected()) {
+            System.out.println("Не удалось подключиться к базе данных. Программа завершена.");
+            return;
         }
 
-        // ---------- D ----------
-        System.out.println("\n$$$$ DIP Demo $$$$");
-        MessageSender emailSender = new EmailSender();
-        MessageSender smsSender = new SmsSender();
+        MusicManager musicManager = new MusicManager(dbManager.getConnection());
+        BookManager bookManager = new BookManager(dbManager.getConnection());
+        JSONParser jsonParser = new JSONParser();
+        Scanner scanner = new Scanner(System.in);
 
-        NotificationService emailService = new NotificationService(emailSender);
-        NotificationService smsService = new NotificationService(smsSender);
+        // Загружаем данные из JSON файла
+        List<VisitorData> visitorsData = jsonParser.parseVisitorsFromFile("books.json");
 
-        System.out.println("1. Отправка через Email:");
-        emailService.send("Ваш заказ готов к выдаче!");
+        boolean running = true;
 
-        System.out.println("\n2. Отправка через SMS:");
-        smsService.send("Ваш код подтверждения: 0123456789");
+        while (running) {
+            printMenu();
+            System.out.print("Выберите опцию: ");
 
-        System.out.println("\n3. Смена отправителя на лету:");
-        NotificationService flexibleService = new NotificationService(emailSender);
-        flexibleService.send("Первое сообщение по email");
-        flexibleService.setSender(smsSender);  // Теперь это работает
-        flexibleService.send("Второе сообщение по SMS");
+            try {
+                int choice = scanner.nextInt();
+                scanner.nextLine(); // consume newline
 
-        System.out.println("\n4. Отправка через временного отправителя:");
-        flexibleService.sendWith(new EmailSender(), "Срочное email-уведомление");
-        flexibleService.sendWith(new SmsSender(), "Срочное SMS-уведомление");
-    }
-
-    public static void displayFlyingBird(FlyingBird bird) {
-        bird.eat();
-        bird.fly();
-    }
-
-    public static void displayNonFlyingBird(NonFlyingBird bird) {
-        bird.eat();
-        bird.walk();
-        if (bird instanceof Penguin penguin) {
-            penguin.swim();
+                switch (choice) {
+                    case 1:
+                        musicManager.getAllMusic();
+                        break;
+                    case 2:
+                        musicManager.getMusicWithoutMT();
+                        break;
+                    case 3:
+                        addFavoriteSongInteractive(musicManager, scanner);
+                        break;
+                    case 4:
+                        if (visitorsData != null) {
+                            jsonParser.printVisitorsData(visitorsData);
+                            bookManager.importDataFromJSON(visitorsData);
+                        } else {
+                            System.out.println("Данные из JSON не загружены.");
+                        }
+                        break;
+                    case 5:
+                        bookManager.getBooksSortedByYear();
+                        break;
+                    case 6:
+                        bookManager.getBooksBefore2000();
+                        break;
+                    case 7:
+                        bookManager.addPersonalInfoAndBooks();
+                        break;
+                    case 8:
+                        bookManager.dropTables();
+                        break;
+                    case 9:
+                        bookManager.showAllVisitors();
+                        break;
+                    case 10:
+                        bookManager.showAllBooks();
+                        break;
+                    case 11:
+                        musicManager.showTableStructure();
+                        break;
+                    case 0:
+                        running = false;
+                        break;
+                    default:
+                        System.out.println("Неверный выбор. Попробуйте снова.");
+                }
+            } catch (Exception e) {
+                System.out.println("Ошибка ввода: " + e.getMessage());
+                scanner.nextLine(); // очистка буфера
+            }
         }
+
+        // Очистка ресурсов
+        bookManager.closeScanner();
+        scanner.close();
+        dbManager.closeConnection();
+        System.out.println("Программа завершена.");
     }
 
-    public static void displayBirdEating(Bird bird) {
-        bird.eat();
+    private static void printMenu() {
+        System.out.println("\n Меню управления музыкой и книгами ");
+        System.out.println("1. Показать все музыкальные композиции");
+        System.out.println("2. Показать композиции без букв 'm' и 't'");
+        System.out.println("3. Добавить любимую композицию");
+        System.out.println("4. Анализ books.json и импорт данных");
+        System.out.println("5. Показать книги отсортированные по году");
+        System.out.println("6. Показать книги до 2000 года");
+        System.out.println("7. Добавить информацию о себе и книги");
+        System.out.println("8. Удалить таблицы книг и посетителей");
+        System.out.println("9. Показать всех посетителей");
+        System.out.println("10. Показать все книги");
+        System.out.println("11. Показать структуру таблицы music");
+        System.out.println("0. Выход");
+    }
+
+    private static void addFavoriteSongInteractive(MusicManager musicManager, Scanner scanner) {
+        System.out.print("Введите название композиции: ");
+        String name = scanner.nextLine();
+
+        musicManager.addFavoriteSong(name);
     }
 }
