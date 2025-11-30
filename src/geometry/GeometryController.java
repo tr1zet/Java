@@ -1,0 +1,206 @@
+package geometry;
+
+import geometry2d.Figure;
+import geometry2d.Circle;
+import geometry2d.Rectangle;
+import geometry2d.Square;
+import geometry2d.Ellipse;
+import javafx.animation.AnimationTimer;
+import javafx.fxml.FXML;
+import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.Button;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
+public class GeometryController {
+    @FXML private Canvas canvas;
+    @FXML private VBox buttonContainer;
+
+    private List<Figure> figures = new ArrayList<>();
+    private Figure selectedFigure = null;
+    private double lastMouseX, lastMouseY;
+    private boolean isDragging = false;
+    private Random random = new Random();
+
+    @FXML
+    public void initialize() {
+        setupCanvas();
+        startAnimation();
+    }
+
+    private void setupCanvas() {
+        // Привязываем размер холста к размеру родительского контейнера
+        canvas.widthProperty().bind(((VBox) canvas.getParent()).widthProperty());
+        canvas.heightProperty().bind(((VBox) canvas.getParent()).heightProperty().subtract(buttonContainer.heightProperty()));
+
+        // Обработчики событий мыши
+        canvas.addEventHandler(MouseEvent.MOUSE_PRESSED, this::handleMousePressed);
+        canvas.addEventHandler(MouseEvent.MOUSE_DRAGGED, this::handleMouseDragged);
+        canvas.addEventHandler(MouseEvent.MOUSE_RELEASED, this::handleMouseReleased);
+        canvas.addEventHandler(MouseEvent.MOUSE_CLICKED, this::handleMouseClicked);
+    }
+
+    private void startAnimation() {
+        // Анимационный таймер для постоянной перерисовки
+        new AnimationTimer() {
+            @Override
+            public void handle(long now) {
+                redrawCanvas();
+            }
+        }.start();
+    }
+
+    private void redrawCanvas() {
+        GraphicsContext gc = canvas.getGraphicsContext2D();
+        gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
+
+        // Рисуем все фигуры
+        for (Figure figure : figures) {
+            figure.draw(gc);
+        }
+    }
+
+    private void handleMousePressed(MouseEvent event) {
+        double x = event.getX();
+        double y = event.getY();
+
+        // Снимаем выделение со всех фигур
+        figures.forEach(f -> f.setSelected(false));
+        selectedFigure = null;
+
+        // Ищем фигуру под курсором (проверяем с конца списка для верхних фигур)
+        for (int i = figures.size() - 1; i >= 0; i--) {
+            Figure figure = figures.get(i);
+            if (figure.contains(x, y)) {
+                selectedFigure = figure;
+                figure.setSelected(true);
+
+                if (event.isSecondaryButtonDown()) {
+                    // Правая кнопка мыши - меняем цвет
+                    figure.setColor(generateRandomColor());
+                    event.consume();
+                } else if (event.isPrimaryButtonDown()) {
+                    // Левая кнопка мыши - начинаем перетаскивание
+                    lastMouseX = x;
+                    lastMouseY = y;
+                    isDragging = true;
+
+                    // Перемещаем фигуру в конец списка (на передний план)
+                    figures.remove(i);
+                    figures.add(figure);
+                }
+                break;
+            }
+        }
+
+        redrawCanvas();
+    }
+
+    private void handleMouseDragged(MouseEvent event) {
+        if (selectedFigure != null && isDragging && event.isPrimaryButtonDown()) {
+            double x = event.getX();
+            double y = event.getY();
+
+            double dx = x - lastMouseX;
+            double dy = y - lastMouseY;
+
+            // Перемещаем фигуру
+            selectedFigure.move(dx, dy);
+
+            lastMouseX = x;
+            lastMouseY = y;
+            redrawCanvas();
+        }
+    }
+
+    private void handleMouseReleased(MouseEvent event) {
+        isDragging = false;
+    }
+
+    private void handleMouseClicked(MouseEvent event) {
+        // Обработка клика (если нужна дополнительная логика)
+        if (event.getClickCount() == 2 && event.isPrimaryButtonDown()) {
+            // Двойной клик - можно добавить функциональность
+        }
+    }
+
+    @FXML
+    private void addCircle() {
+        if (canvas.getWidth() > 0 && canvas.getHeight() > 0) {
+            double x = 50 + random.nextDouble() * (canvas.getWidth() - 100);
+            double y = 50 + random.nextDouble() * (canvas.getHeight() - 100);
+            double radius = 20 + random.nextDouble() * 50;
+            Color color = generateRandomColor();
+
+            Circle circle = new Circle(x, y, radius, color);
+            figures.add(circle);
+            redrawCanvas();
+        }
+    }
+
+    @FXML
+    private void addRectangle() {
+        if (canvas.getWidth() > 0 && canvas.getHeight() > 0) {
+            double x = 50 + random.nextDouble() * (canvas.getWidth() - 100);
+            double y = 50 + random.nextDouble() * (canvas.getHeight() - 100);
+            double width = 40 + random.nextDouble() * 80;
+            double height = 40 + random.nextDouble() * 80;
+            Color color = generateRandomColor();
+
+            Rectangle rectangle = new Rectangle(x, y, width, height, color);
+            figures.add(rectangle);
+            redrawCanvas();
+        }
+    }
+
+    @FXML
+    private void addSquare() {
+        if (canvas.getWidth() > 0 && canvas.getHeight() > 0) {
+            double x = 50 + random.nextDouble() * (canvas.getWidth() - 100);
+            double y = 50 + random.nextDouble() * (canvas.getHeight() - 100);
+            double size = 40 + random.nextDouble() * 80;
+            Color color = generateRandomColor();
+
+            Square square = new Square(x, y, size, color);
+            figures.add(square);
+            redrawCanvas();
+        }
+    }
+
+    @FXML
+    private void addEllipse() {
+        if (canvas.getWidth() > 0 && canvas.getHeight() > 0) {
+            double x = 50 + random.nextDouble() * (canvas.getWidth() - 100);
+            double y = 50 + random.nextDouble() * (canvas.getHeight() - 100);
+            double radiusX = 30 + random.nextDouble() * 60;
+            double radiusY = 20 + random.nextDouble() * 40;
+            Color color = generateRandomColor();
+
+            Ellipse ellipse = new Ellipse(x, y, radiusX, radiusY, color);
+            figures.add(ellipse);
+            redrawCanvas();
+        }
+    }
+
+    @FXML
+    private void clearCanvas() {
+        figures.clear();
+        selectedFigure = null;
+        redrawCanvas();
+    }
+
+    private Color generateRandomColor() {
+        return Color.color(
+                random.nextDouble(),
+                random.nextDouble(),
+                random.nextDouble(),
+                0.7 + random.nextDouble() * 0.3 // Прозрачность от 70% до 100%
+        );
+    }
+}

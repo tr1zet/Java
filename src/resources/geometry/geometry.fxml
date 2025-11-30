@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.canvas.*?>
+
+<VBox xmlns="http://javafx.com/javafx/11.0.1"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="geometry.GeometryController"
+      spacing="10">
+
+    <!-- Изменили HBox на VBox -->
+    <VBox fx:id="buttonContainer" spacing="10" style="-fx-padding: 10;">
+        <Button text="Добавить круг" onAction="#addCircle"
+                style="-fx-pref-width: 120;"/>
+        <Button text="Добавить прямоугольник" onAction="#addRectangle"
+                style="-fx-pref-width: 150;"/>
+        <Button text="Добавить квадрат" onAction="#addSquare"
+                style="-fx-pref-width: 130;"/>
+        <Button text="Добавить эллипс" onAction="#addEllipse"
+                style="-fx-pref-width: 120;"/>
+        <Button text="Очистить" onAction="#clearCanvas"
+                style="-fx-pref-width: 80; -fx-background-color: #ff6b6b;"/>
+    </VBox>
+
+    <Canvas fx:id="canvas"
+            style="-fx-border-color: #ccc; -fx-border-width: 1;"
+            height="550"/>
+</VBox>
