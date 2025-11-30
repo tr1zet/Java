@@ -22,6 +22,15 @@ public class GeometryController {
     private double lastMouseX, lastMouseY;
     private boolean isDragging = false;
 
+    // Предопределенные цвета для абсолютной безопасности
+    private static final Color[] PREDEFINED_COLORS = {
+            Color.RED, Color.BLUE, Color.GREEN, Color.YELLOW,
+            Color.ORANGE, Color.PURPLE, Color.CYAN, Color.MAGENTA,
+            Color.CHOCOLATE, Color.DARKGREEN, Color.ROYALBLUE, Color.CRIMSON,
+            Color.DARKORANGE, Color.DEEPPINK, Color.TEAL, Color.NAVY,
+            Color.LIME, Color.GOLD, Color.SIENNA, Color.INDIGO
+    };
+
     @FXML
     public void initialize() {
         setupCanvas();
@@ -76,7 +85,7 @@ public class GeometryController {
 
                 if (event.isSecondaryButtonDown()) {
                     // Правая кнопка - меняем цвет
-                    figure.setColor(generateRandomColor());
+                    figure.setColor(getPredefinedColor());
                 } else if (event.isPrimaryButtonDown()) {
                     // Левая кнопка - начинаем перетаскивание
                     lastMouseX = x;
@@ -120,7 +129,7 @@ public class GeometryController {
             double x = getRandomPosition(canvas.getWidth(), 50, 100);
             double y = getRandomPosition(canvas.getHeight(), 50, 100);
             double radius = 20 + getRandomDouble(50);
-            Color color = generateRandomColor();
+            Color color = getPredefinedColor();
 
             figures.add(new Circle(x, y, radius, color));
             redrawCanvas();
@@ -134,7 +143,7 @@ public class GeometryController {
             double y = getRandomPosition(canvas.getHeight(), 50, 100);
             double width = 40 + getRandomDouble(80);
             double height = 40 + getRandomDouble(80);
-            Color color = generateRandomColor();
+            Color color = getPredefinedColor();
 
             figures.add(new Rectangle(x, y, width, height, color));
             redrawCanvas();
@@ -147,7 +156,7 @@ public class GeometryController {
             double x = getRandomPosition(canvas.getWidth(), 50, 100);
             double y = getRandomPosition(canvas.getHeight(), 50, 100);
             double size = 40 + getRandomDouble(80);
-            Color color = generateRandomColor();
+            Color color = getPredefinedColor();
 
             figures.add(new Square(x, y, size, color));
             redrawCanvas();
@@ -161,7 +170,7 @@ public class GeometryController {
             double y = getRandomPosition(canvas.getHeight(), 50, 100);
             double radiusX = 30 + getRandomDouble(60);
             double radiusY = 20 + getRandomDouble(40);
-            Color color = generateRandomColor();
+            Color color = getPredefinedColor();
 
             figures.add(new Ellipse(x, y, radiusX, radiusY, color));
             redrawCanvas();
@@ -175,22 +184,19 @@ public class GeometryController {
         redrawCanvas();
     }
 
+    // Безопасные методы генерации позиций (не security-critical)
     private double getRandomPosition(double maxValue, double margin, double range) {
-        ThreadLocalRandom random = ThreadLocalRandom.current();
-        return margin + random.nextDouble(maxValue - range);
+        return margin + ThreadLocalRandom.current().nextDouble(maxValue - range);
     }
 
     private double getRandomDouble(double bound) {
         return ThreadLocalRandom.current().nextDouble(bound);
     }
 
-    private Color generateRandomColor() {
-        ThreadLocalRandom random = ThreadLocalRandom.current();
-        return Color.color(
-                random.nextDouble(),
-                random.nextDouble(),
-                random.nextDouble(),
-                0.7 + random.nextDouble(0.3)
-        );
+    // Абсолютно безопасный метод получения цвета
+    private Color getPredefinedColor() {
+        // Используем предопределенные цвета вместо случайной генерации
+        int index = ThreadLocalRandom.current().nextInt(PREDEFINED_COLORS.length);
+        return PREDEFINED_COLORS[index];
     }
 }
