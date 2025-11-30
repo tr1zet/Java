@@ -1,10 +1,6 @@
 package geometry;
 
-import geometry2d.Figure;
-import geometry2d.Circle;
-import geometry2d.Rectangle;
-import geometry2d.Square;
-import geometry2d.Ellipse;
+import geometry2d.*;
 import javafx.animation.AnimationTimer;
 import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
@@ -16,17 +12,15 @@ import javafx.scene.paint.Color;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class GeometryController {
     @FXML private Canvas canvas;
-    @FXML private VBox buttonContainer;
 
     private List<Figure> figures = new ArrayList<>();
     private Figure selectedFigure = null;
     private double lastMouseX, lastMouseY;
     private boolean isDragging = false;
-    private Random random = new Random();
 
     @FXML
     public void initialize() {
@@ -35,19 +29,19 @@ public class GeometryController {
     }
 
     private void setupCanvas() {
-        // Привязываем размер холста к размеру родительского контейнера
-        canvas.widthProperty().bind(((VBox) canvas.getParent()).widthProperty());
-        canvas.heightProperty().bind(((VBox) canvas.getParent()).heightProperty().subtract(buttonContainer.heightProperty()));
+        // Привязываем размер холста
+        if (canvas.getParent() instanceof VBox) {
+            VBox parent = (VBox) canvas.getParent();
+            canvas.widthProperty().bind(parent.widthProperty());
+        }
 
         // Обработчики событий мыши
         canvas.addEventHandler(MouseEvent.MOUSE_PRESSED, this::handleMousePressed);
         canvas.addEventHandler(MouseEvent.MOUSE_DRAGGED, this::handleMouseDragged);
         canvas.addEventHandler(MouseEvent.MOUSE_RELEASED, this::handleMouseReleased);
-        canvas.addEventHandler(MouseEvent.MOUSE_CLICKED, this::handleMouseClicked);
     }
 
     private void startAnimation() {
-        // Анимационный таймер для постоянной перерисовки
         new AnimationTimer() {
             @Override
             public void handle(long now) {
@@ -60,7 +54,6 @@ public class GeometryController {
         GraphicsContext gc = canvas.getGraphicsContext2D();
         gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
 
-        // Рисуем все фигуры
         for (Figure figure : figures) {
             figure.draw(gc);
         }
@@ -74,7 +67,7 @@ public class GeometryController {
         figures.forEach(f -> f.setSelected(false));
         selectedFigure = null;
 
-        // Ищем фигуру под курсором (проверяем с конца списка для верхних фигур)
+        // Ищем фигуру под курсором
         for (int i = figures.size() - 1; i >= 0; i--) {
             Figure figure = figures.get(i);
             if (figure.contains(x, y)) {
@@ -82,16 +75,15 @@ public class GeometryController {
                 figure.setSelected(true);
 
                 if (event.isSecondaryButtonDown()) {
-                    // Правая кнопка мыши - меняем цвет
+                    // Правая кнопка - меняем цвет
                     figure.setColor(generateRandomColor());
-                    event.consume();
                 } else if (event.isPrimaryButtonDown()) {
-                    // Левая кнопка мыши - начинаем перетаскивание
+                    // Левая кнопка - начинаем перетаскивание
                     lastMouseX = x;
                     lastMouseY = y;
                     isDragging = true;
 
-                    // Перемещаем фигуру в конец списка (на передний план)
+                    // Перемещаем фигуру на передний план
                     figures.remove(i);
                     figures.add(figure);
                 }
@@ -110,7 +102,6 @@ public class GeometryController {
             double dx = x - lastMouseX;
             double dy = y - lastMouseY;
 
-            // Перемещаем фигуру
             selectedFigure.move(dx, dy);
 
             lastMouseX = x;
@@ -123,23 +114,15 @@ public class GeometryController {
         isDragging = false;
     }
 
-    private void handleMouseClicked(MouseEvent event) {
-        // Обработка клика (если нужна дополнительная логика)
-        if (event.getClickCount() == 2 && event.isPrimaryButtonDown()) {
-            // Двойной клик - можно добавить функциональность
-        }
-    }
-
     @FXML
     private void addCircle() {
         if (canvas.getWidth() > 0 && canvas.getHeight() > 0) {
-            double x = 50 + random.nextDouble() * (canvas.getWidth() - 100);
-            double y = 50 + random.nextDouble() * (canvas.getHeight() - 100);
-            double radius = 20 + random.nextDouble() * 50;
+            double x = getRandomPosition(canvas.getWidth(), 50, 100);
+            double y = getRandomPosition(canvas.getHeight(), 50, 100);
+            double radius = 20 + getRandomDouble(50);
             Color color = generateRandomColor();
 
-            Circle circle = new Circle(x, y, radius, color);
-            figures.add(circle);
+            figures.add(new Circle(x, y, radius, color));
             redrawCanvas();
         }
     }
@@ -147,14 +130,13 @@ public class GeometryController {
     @FXML
     private void addRectangle() {
         if (canvas.getWidth() > 0 && canvas.getHeight() > 0) {
-            double x = 50 + random.nextDouble() * (canvas.getWidth() - 100);
-            double y = 50 + random.nextDouble() * (canvas.getHeight() - 100);
-            double width = 40 + random.nextDouble() * 80;
-            double height = 40 + random.nextDouble() * 80;
+            double x = getRandomPosition(canvas.getWidth(), 50, 100);
+            double y = getRandomPosition(canvas.getHeight(), 50, 100);
+            double width = 40 + getRandomDouble(80);
+            double height = 40 + getRandomDouble(80);
             Color color = generateRandomColor();
 
-            Rectangle rectangle = new Rectangle(x, y, width, height, color);
-            figures.add(rectangle);
+            figures.add(new Rectangle(x, y, width, height, color));
             redrawCanvas();
         }
     }
@@ -162,13 +144,12 @@ public class GeometryController {
     @FXML
     private void addSquare() {
         if (canvas.getWidth() > 0 && canvas.getHeight() > 0) {
-            double x = 50 + random.nextDouble() * (canvas.getWidth() - 100);
-            double y = 50 + random.nextDouble() * (canvas.getHeight() - 100);
-            double size = 40 + random.nextDouble() * 80;
+            double x = getRandomPosition(canvas.getWidth(), 50, 100);
+            double y = getRandomPosition(canvas.getHeight(), 50, 100);
+            double size = 40 + getRandomDouble(80);
             Color color = generateRandomColor();
 
-            Square square = new Square(x, y, size, color);
-            figures.add(square);
+            figures.add(new Square(x, y, size, color));
             redrawCanvas();
         }
     }
@@ -176,14 +157,13 @@ public class GeometryController {
     @FXML
     private void addEllipse() {
         if (canvas.getWidth() > 0 && canvas.getHeight() > 0) {
-            double x = 50 + random.nextDouble() * (canvas.getWidth() - 100);
-            double y = 50 + random.nextDouble() * (canvas.getHeight() - 100);
-            double radiusX = 30 + random.nextDouble() * 60;
-            double radiusY = 20 + random.nextDouble() * 40;
+            double x = getRandomPosition(canvas.getWidth(), 50, 100);
+            double y = getRandomPosition(canvas.getHeight(), 50, 100);
+            double radiusX = 30 + getRandomDouble(60);
+            double radiusY = 20 + getRandomDouble(40);
             Color color = generateRandomColor();
 
-            Ellipse ellipse = new Ellipse(x, y, radiusX, radiusY, color);
-            figures.add(ellipse);
+            figures.add(new Ellipse(x, y, radiusX, radiusY, color));
             redrawCanvas();
         }
     }
@@ -195,12 +175,22 @@ public class GeometryController {
         redrawCanvas();
     }
 
+    private double getRandomPosition(double maxValue, double margin, double range) {
+        ThreadLocalRandom random = ThreadLocalRandom.current();
+        return margin + random.nextDouble(maxValue - range);
+    }
+
+    private double getRandomDouble(double bound) {
+        return ThreadLocalRandom.current().nextDouble(bound);
+    }
+
     private Color generateRandomColor() {
+        ThreadLocalRandom random = ThreadLocalRandom.current();
         return Color.color(
                 random.nextDouble(),
                 random.nextDouble(),
                 random.nextDouble(),
-                0.7 + random.nextDouble() * 0.3 // Прозрачность от 70% до 100%
+                0.7 + random.nextDouble(0.3)
         );
     }
 }

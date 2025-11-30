@@ -10,8 +10,6 @@ public class CalculatorController {
 
     private Calculator calculator;
     private boolean startNewNumber = true;
-    private String lastOperator = "";
-    private double result = 0;
 
     @FXML
     public void initialize() {
@@ -44,7 +42,13 @@ public class CalculatorController {
     }
 
     private boolean isValidInput(String input) {
-        return input.matches("[0-9+\\-*/.=]") || input.equals("\r");
+        if (input == null || input.isEmpty()) return false;
+
+        // Безопасная проверка символов
+        char c = input.charAt(0);
+        return Character.isDigit(c) ||
+                c == '+' || c == '-' || c == '*' || c == '/' ||
+                c == '.' || c == '=' || c == '\r';
     }
 
     @FXML
@@ -79,13 +83,12 @@ public class CalculatorController {
 
         String currentText = display.getText();
 
-        // Проверка на корректность ввода
-        if (text.matches("[+\\-*/]")) {
-            if (currentText.isEmpty() || currentText.matches(".*[+\\-*/]$")) {
+        if (isOperator(text)) {
+            if (currentText.isEmpty() || isOperator(currentText.substring(currentText.length() - 1))) {
                 return;
             }
         } else if (text.equals(".")) {
-            if (currentText.contains(".") && !currentText.matches(".*[+\\-*/].*")) {
+            if (hasDecimalPointInCurrentNumber(currentText)) {
                 return;
             }
         }
@@ -93,12 +96,34 @@ public class CalculatorController {
         display.setText(currentText + text);
     }
 
+    private boolean isOperator(String text) {
+        return text.length() == 1 && isOperator(text.charAt(0));
+    }
+
+    private boolean isOperator(char c) {
+        return c == '+' || c == '-' || c == '*' || c == '/';
+    }
+
+    private boolean hasDecimalPointInCurrentNumber(String text) {
+        if (text.isEmpty()) return false;
+
+        // Ищем последний оператор
+        int lastOperatorIndex = -1;
+        for (int i = text.length() - 1; i >= 0; i--) {
+            if (isOperator(text.charAt(i))) {
+                lastOperatorIndex = i;
+                break;
+            }
+        }
+
+        String currentNumber = lastOperatorIndex == -1 ? text : text.substring(lastOperatorIndex + 1);
+        return currentNumber.contains(".");
+    }
+
     private void clear() {
         display.setText("0");
         calculator.clear();
         startNewNumber = true;
-        lastOperator = "";
-        result = 0;
     }
 
     private void backspace() {
@@ -127,10 +152,10 @@ public class CalculatorController {
             display.setText(formatResult(result));
             startNewNumber = true;
         } catch (ArithmeticException e) {
-            display.setText("Ошибка: деление на 0");
+            display.setText("Ошибка: " + e.getMessage());
             startNewNumber = true;
         } catch (Exception e) {
-            display.setText("Ошибка");
+            display.setText("Ошибка вычисления");
             startNewNumber = true;
         }
     }
@@ -139,7 +164,23 @@ public class CalculatorController {
         if (result == (long) result) {
             return String.format("%d", (long) result);
         } else {
-            return String.format("%.6f", result).replaceAll("0*$", "").replaceAll("\\.$", "");
+            String formatted = String.format("%.10f", result);
+            return trimTrailingZeros(formatted);
         }
+    }
+
+    private String trimTrailingZeros(String number) {
+        if (!number.contains(".")) return number;
+
+        int i = number.length() - 1;
+        while (i >= 0 && number.charAt(i) == '0') {
+            i--;
+        }
+
+        if (i >= 0 && number.charAt(i) == '.') {
+            i--;
+        }
+
+        return number.substring(0, i + 1);
     }
 }

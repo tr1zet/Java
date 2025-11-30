@@ -11,7 +11,6 @@ public class GeometryApp extends Application {
     @Override
     public void start(Stage primaryStage) {
         try {
-            // Правильный путь к FXML с учетом структуры
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/geometry/geometry.fxml"));
             Parent root = loader.load();
 
@@ -23,8 +22,7 @@ public class GeometryApp extends Application {
             primaryStage.show();
 
         } catch (Exception e) {
-            e.printStackTrace();
-            System.err.println("Error loading geometry.fxml: " + e.getMessage());
+            System.err.println("Ошибка загрузки приложения: " + e.getMessage());
         }
     }
 
