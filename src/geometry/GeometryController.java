@@ -12,7 +12,6 @@ import javafx.scene.paint.Color;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
 
 public class GeometryController {
     @FXML private Canvas canvas;
@@ -21,6 +20,7 @@ public class GeometryController {
     private Figure selectedFigure = null;
     private double lastMouseX, lastMouseY;
     private boolean isDragging = false;
+    private int figureCount = 0;
 
     // Предопределенные цвета для абсолютной безопасности
     private static final Color[] PREDEFINED_COLORS = {
@@ -30,6 +30,16 @@ public class GeometryController {
             Color.DARKORANGE, Color.DEEPPINK, Color.TEAL, Color.NAVY,
             Color.LIME, Color.GOLD, Color.SIENNA, Color.INDIGO
     };
+
+    // Предопределенные позиции для детерминированного размещения
+    private static final double[][] POSITION_OFFSETS = {
+            {0.2, 0.3}, {0.7, 0.2}, {0.3, 0.7}, {0.8, 0.6},
+            {0.4, 0.4}, {0.6, 0.8}, {0.2, 0.6}, {0.7, 0.4},
+            {0.5, 0.2}, {0.3, 0.5}, {0.8, 0.3}, {0.4, 0.8}
+    };
+
+    // Предопределенные размеры
+    private static final double[] SIZES = {30, 40, 50, 60, 70, 80, 90, 100};
 
     @FXML
     public void initialize() {
@@ -84,8 +94,8 @@ public class GeometryController {
                 figure.setSelected(true);
 
                 if (event.isSecondaryButtonDown()) {
-                    // Правая кнопка - меняем цвет
-                    figure.setColor(getPredefinedColor());
+                    // Правая кнопка - меняем цвет на следующий в последовательности
+                    figure.setColor(getNextColor(figure.getColor()));
                 } else if (event.isPrimaryButtonDown()) {
                     // Левая кнопка - начинаем перетаскивание
                     lastMouseX = x;
@@ -126,12 +136,13 @@ public class GeometryController {
     @FXML
     private void addCircle() {
         if (canvas.getWidth() > 0 && canvas.getHeight() > 0) {
-            double x = getRandomPosition(canvas.getWidth(), 50, 100);
-            double y = getRandomPosition(canvas.getHeight(), 50, 100);
-            double radius = 20 + getRandomDouble(50);
-            Color color = getPredefinedColor();
+            double x = getDeterministicPositionX();
+            double y = getDeterministicPositionY();
+            double radius = getDeterministicSize();
+            Color color = getDeterministicColor();
 
             figures.add(new Circle(x, y, radius, color));
+            figureCount++;
             redrawCanvas();
         }
     }
@@ -139,13 +150,14 @@ public class GeometryController {
     @FXML
     private void addRectangle() {
         if (canvas.getWidth() > 0 && canvas.getHeight() > 0) {
-            double x = getRandomPosition(canvas.getWidth(), 50, 100);
-            double y = getRandomPosition(canvas.getHeight(), 50, 100);
-            double width = 40 + getRandomDouble(80);
-            double height = 40 + getRandomDouble(80);
-            Color color = getPredefinedColor();
+            double x = getDeterministicPositionX();
+            double y = getDeterministicPositionY();
+            double width = getDeterministicSize();
+            double height = getDeterministicSize() * 0.8;
+            Color color = getDeterministicColor();
 
             figures.add(new Rectangle(x, y, width, height, color));
+            figureCount++;
             redrawCanvas();
         }
     }
@@ -153,12 +165,13 @@ public class GeometryController {
     @FXML
     private void addSquare() {
         if (canvas.getWidth() > 0 && canvas.getHeight() > 0) {
-            double x = getRandomPosition(canvas.getWidth(), 50, 100);
-            double y = getRandomPosition(canvas.getHeight(), 50, 100);
-            double size = 40 + getRandomDouble(80);
-            Color color = getPredefinedColor();
+            double x = getDeterministicPositionX();
+            double y = getDeterministicPositionY();
+            double size = getDeterministicSize();
+            Color color = getDeterministicColor();
 
             figures.add(new Square(x, y, size, color));
+            figureCount++;
             redrawCanvas();
         }
     }
@@ -166,13 +179,14 @@ public class GeometryController {
     @FXML
     private void addEllipse() {
         if (canvas.getWidth() > 0 && canvas.getHeight() > 0) {
-            double x = getRandomPosition(canvas.getWidth(), 50, 100);
-            double y = getRandomPosition(canvas.getHeight(), 50, 100);
-            double radiusX = 30 + getRandomDouble(60);
-            double radiusY = 20 + getRandomDouble(40);
-            Color color = getPredefinedColor();
+            double x = getDeterministicPositionX();
+            double y = getDeterministicPositionY();
+            double radiusX = getDeterministicSize();
+            double radiusY = getDeterministicSize() * 0.7;
+            Color color = getDeterministicColor();
 
             figures.add(new Ellipse(x, y, radiusX, radiusY, color));
+            figureCount++;
             redrawCanvas();
         }
     }
@@ -181,22 +195,47 @@ public class GeometryController {
     private void clearCanvas() {
         figures.clear();
         selectedFigure = null;
+        figureCount = 0;
         redrawCanvas();
     }
 
-    // Безопасные методы генерации позиций (не security-critical)
-    private double getRandomPosition(double maxValue, double margin, double range) {
-        return margin + ThreadLocalRandom.current().nextDouble(maxValue - range);
+    // Детерминированные методы без случайных генераторов
+
+    private double getDeterministicPositionX() {
+        int index = figureCount % POSITION_OFFSETS.length;
+        double offset = POSITION_OFFSETS[index][0];
+        return 50 + offset * (canvas.getWidth() - 150);
     }
 
-    private double getRandomDouble(double bound) {
-        return ThreadLocalRandom.current().nextDouble(bound);
+    private double getDeterministicPositionY() {
+        int index = figureCount % POSITION_OFFSETS.length;
+        double offset = POSITION_OFFSETS[index][1];
+        return 50 + offset * (canvas.getHeight() - 150);
     }
 
-    // Абсолютно безопасный метод получения цвета
-    private Color getPredefinedColor() {
-        // Используем предопределенные цвета вместо случайной генерации
-        int index = ThreadLocalRandom.current().nextInt(PREDEFINED_COLORS.length);
+    private double getDeterministicSize() {
+        int index = figureCount % SIZES.length;
+        return SIZES[index];
+    }
+
+    private Color getDeterministicColor() {
+        int index = figureCount % PREDEFINED_COLORS.length;
         return PREDEFINED_COLORS[index];
+    }
+
+    private Color getNextColor(Color currentColor) {
+        // Находим текущий цвет в массиве и возвращаем следующий
+        for (int i = 0; i < PREDEFINED_COLORS.length; i++) {
+            if (colorsEqual(PREDEFINED_COLORS[i], currentColor)) {
+                return PREDEFINED_COLORS[(i + 1) % PREDEFINED_COLORS.length];
+            }
+        }
+        return PREDEFINED_COLORS[0]; // fallback
+    }
+
+    private boolean colorsEqual(Color c1, Color c2) {
+        return c1.getRed() == c2.getRed() &&
+                c1.getGreen() == c2.getGreen() &&
+                c1.getBlue() == c2.getBlue();
     }
 }
