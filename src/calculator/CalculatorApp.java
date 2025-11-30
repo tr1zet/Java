@@ -11,7 +11,6 @@ public class CalculatorApp extends Application {
     @Override
     public void start(Stage primaryStage) {
         try {
-            // Правильный путь к FXML с учетом структуры
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/calculator/calculator.fxml"));
             Parent root = loader.load();
 
@@ -23,8 +22,8 @@ public class CalculatorApp extends Application {
             primaryStage.show();
 
         } catch (Exception e) {
-            e.printStackTrace();
-            System.err.println("Error loading calculator.fxml: " + e.getMessage());
+            // В production коде не показываем stack trace
+            System.err.println("Не удалось запустить калькулятор");
         }
     }
 

@@ -44,7 +44,6 @@ public class CalculatorController {
     private boolean isValidInput(String input) {
         if (input == null || input.isEmpty()) return false;
 
-        // Безопасная проверка символов
         char c = input.charAt(0);
         return Character.isDigit(c) ||
                 c == '+' || c == '-' || c == '*' || c == '/' ||
@@ -107,7 +106,6 @@ public class CalculatorController {
     private boolean hasDecimalPointInCurrentNumber(String text) {
         if (text.isEmpty()) return false;
 
-        // Ищем последний оператор
         int lastOperatorIndex = -1;
         for (int i = text.length() - 1; i >= 0; i--) {
             if (isOperator(text.charAt(i))) {
@@ -155,7 +153,7 @@ public class CalculatorController {
             display.setText("Ошибка: " + e.getMessage());
             startNewNumber = true;
         } catch (Exception e) {
-            display.setText("Ошибка вычисления");
+            display.setText("Ошибка");
             startNewNumber = true;
         }
     }

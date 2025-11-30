@@ -15,15 +15,12 @@ public class Calculator {
             throw new ArithmeticException("Пустое выражение");
         }
 
-        // Убираем пробелы - безопасная операция
         expression = expression.replace(" ", "");
 
-        // Проверяем базовые случаи - просто число
         if (isSimpleNumber(expression)) {
             return Double.parseDouble(expression);
         }
 
-        // Используем безопасный парсинг вместо рекурсивных regex
         return parseExpression(expression);
     }
 
@@ -41,7 +38,6 @@ public class Calculator {
     private double parseExpression(String expression) {
         expression = removeOuterParentheses(expression);
 
-        // Ищем оператор с наименьшим приоритетом
         int operatorIndex = findLowestPriorityOperator(expression);
 
         if (operatorIndex != -1) {
@@ -62,16 +58,15 @@ public class Calculator {
                     }
                     return left / right;
                 default:
-                    throw new ArithmeticException("Неизвестный оператор: " + operator);
+                    throw new ArithmeticException("Неизвестный оператор");
             }
         }
-
 
         if (isSimpleNumber(expression)) {
             return Double.parseDouble(expression);
         }
 
-        throw new ArithmeticException("Некорректное выражение: " + expression);
+        throw new ArithmeticException("Некорректное выражение");
     }
 
     private int findLowestPriorityOperator(String expression) {
@@ -101,7 +96,7 @@ public class Calculator {
             }
         }
 
-        return -1; // Операторов не найдено
+        return -1;
     }
 
     private boolean isOperator(char c) {
@@ -110,7 +105,6 @@ public class Calculator {
 
     private String removeOuterParentheses(String expression) {
         if (expression.startsWith("(") && expression.endsWith(")")) {
-            // Проверяем, что скобки сбалансированы
             int count = 1;
             for (int i = 1; i < expression.length() - 1; i++) {
                 char c = expression.charAt(i);
@@ -118,12 +112,10 @@ public class Calculator {
                 else if (c == ')') count--;
 
                 if (count == 0) {
-                    // Не все выражение в скобках
                     return expression;
                 }
             }
             if (count == 1) {
-                // Все выражение в скобках
                 return expression.substring(1, expression.length() - 1);
             }
         }
