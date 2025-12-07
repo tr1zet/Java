@@ -2,6 +2,7 @@ package chat.client;
 
 import chat.model.Message;
 import chat.model.MessageType;
+import com.google.gson.Gson; // НОВЫЙ ИМПОРТ
 
 import java.io.*;
 import java.net.Socket;
@@ -15,7 +16,11 @@ public class ChatClient {
 
     private Socket socket;
     private String nickname;
-    private ObjectOutputStream outputStream;
+    // ЗАМЕНА: Используем PrintWriter и BufferedReader
+    private PrintWriter writer;
+    private BufferedReader reader;
+    private final Gson gson = new Gson(); // Используем Gson
+
     private final AtomicBoolean isConnected = new AtomicBoolean(false);
 
     public static void main(String[] args) {
@@ -42,16 +47,19 @@ public class ChatClient {
 
             // 2. Подключение к серверу
             socket = new Socket(SERVER_HOST, SERVER_PORT);
-            outputStream = new ObjectOutputStream(socket.getOutputStream());
-            ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream());
+
+            // Инициализация текстовых потоков
+            writer = new PrintWriter(socket.getOutputStream(), true); // Autoflush = true
+            reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
             isConnected.set(true);
 
-            // 3. Отправка никнейма на сервер
+            // 3. Отправка никнейма на сервер (через JSON)
             sendMessage(new Message(MessageType.CONNECT, nickname, null, null));
             System.out.println("Подключено к серверу как " + nickname);
 
             // Запуск потока для чтения сообщений от сервера
-            Thread readThread = new Thread(() -> readMessages(inputStream), "Client-Read-Thread");
+            Thread readThread = new Thread(() -> readMessages(), "Client-Read-Thread");
             readThread.start();
 
             // Запуск потока для обработки ввода пользователя
@@ -71,17 +79,17 @@ public class ChatClient {
     }
 
 
-    private void readMessages(ObjectInputStream inputStream) {
+    private void readMessages() {
         try {
-            while (isConnected.get()) {
-                Message message = (Message) inputStream.readObject();
+            String json;
+            while (isConnected.get() && (json = reader.readLine()) != null) {
+                // БЕЗОПАСНАЯ ДЕСЕРИАЛИЗАЦИЯ: Преобразуем JSON в объект Message
+                Message message = gson.fromJson(json, Message.class);
                 handleMessage(message);
             }
-        } catch (EOFException e) {
-            System.err.println("\n[СЕРВЕР]: Соединение закрыто сервером.");
-        } catch (IOException | ClassNotFoundException e) {
+        } catch (IOException e) {
             if (isConnected.get()) {
-                System.err.println("\n[СЕРВЕР]: Соединение потеряно.");
+                System.err.println("\n[СЕРВЕР]: Соединение потеряно или закрыто.");
             }
         } finally {
             disconnect();
@@ -91,9 +99,9 @@ public class ChatClient {
 
     private void handleMessage(Message message) {
         switch (message.type()) {
-            case BROADCAST, PRIVATE -> System.out.println("\n" + message.getDisplayFormat()); // Требование 6
+            case BROADCAST, PRIVATE -> System.out.println("\n" + message.getDisplayFormat());
             case USER_LIST -> {
-                System.out.println("\n--- Активные пользователи ---"); // Требование 4
+                System.out.println("\n--- Активные пользователи ---");
                 String[] users = message.text().split(",");
                 for (String user : users) {
                     if (!user.equals(nickname)) {
@@ -111,9 +119,9 @@ public class ChatClient {
     public synchronized void sendMessage(Message message) {
         if (!isConnected.get()) return;
         try {
-            outputStream.writeObject(message);
-            outputStream.flush();
-        } catch (IOException e) {
+            String json = gson.toJson(message);
+            writer.println(json); // Отправляем строку
+        } catch (Exception e) {
             System.err.println("Ошибка отправки сообщения: " + e.getMessage());
             disconnect();
         }
@@ -124,7 +132,6 @@ public class ChatClient {
         if (isConnected.compareAndSet(true, false)) {
             System.out.println("\nОтключение от сервера...");
             try {
-                // Отправляем серверу сообщение о выходе
                 sendMessage(new Message(MessageType.DISCONNECT, nickname, null, null));
                 if (socket != null && !socket.isClosed()) {
                     socket.close();

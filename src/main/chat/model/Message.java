@@ -1,14 +1,12 @@
 package chat.model;
 
-import java.io.Serializable;
-
 
 public record Message(
         MessageType type,
         String sender,
         String recipient,
         String text
-) implements Serializable {
+) {
 
 
     public String getDisplayFormat() {

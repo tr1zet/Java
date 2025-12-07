@@ -20,9 +20,11 @@ public class Main {
                 switch (choice) {
                     case 1:
                         System.out.println("\n[СИСТЕМА]: Запуск сервера в фоновом потоке...");
+
                         Thread serverThread = new Thread(() -> new ChatServer().start(), "ChatServer-Thread");
                         serverThread.setDaemon(true);
                         serverThread.start();
+
                         Thread.sleep(500);
 
                         System.out.println("[СИСТЕМА]: Запуск первого клиента...");

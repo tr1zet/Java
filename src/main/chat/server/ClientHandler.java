@@ -2,6 +2,7 @@ package chat.server;
 
 import chat.model.Message;
 import chat.model.MessageType;
+import com.google.gson.Gson; // НОВЫЙ ИМПОРТ
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,7 +14,10 @@ public class ClientHandler implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(ClientHandler.class);
     private final Socket clientSocket;
     private final ChatServer server;
-    private ObjectOutputStream outputStream;
+    private PrintWriter writer;
+    private BufferedReader reader;
+    private final Gson gson = new Gson();
+
     private String nickname;
     private volatile boolean isRunning = true;
 
@@ -25,11 +29,18 @@ public class ClientHandler implements Runnable {
     @Override
     public void run() {
         try {
-            outputStream = new ObjectOutputStream(clientSocket.getOutputStream());
-            ObjectInputStream inputStream = new ObjectInputStream(clientSocket.getInputStream());
+            writer = new PrintWriter(clientSocket.getOutputStream(), true);
+            reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 
             // 1. Приём никнейма
-            Message initialMessage = (Message) inputStream.readObject();
+            String initialJson = reader.readLine(); // Читаем JSON строку
+            if (initialJson == null) {
+                logger.warn("Соединение закрыто до отправки никнейма.");
+                return;
+            }
+
+            Message initialMessage = gson.fromJson(initialJson, Message.class);
+
             if (initialMessage.type() == MessageType.CONNECT) {
                 nickname = initialMessage.sender();
                 server.addClient(nickname, this);
@@ -42,21 +53,18 @@ public class ClientHandler implements Runnable {
             }
 
             // 2. Основной цикл обработки сообщений
-            while (isRunning) {
-                Message message = (Message) inputStream.readObject();
+            String json;
+            while (isRunning && (json = reader.readLine()) != null) {
+                // БЕЗОПАСНАЯ ДЕСЕРИАЛИЗАЦИЯ: Преобразуем JSON в объект Message
+                Message message = gson.fromJson(json, Message.class);
                 handleMessage(message);
             }
-        } catch (EOFException e) {
-            logger.info("Соединение с клиентом {} корректно закрыто.", nickname);
         } catch (IOException e) {
             logger.warn("Соединение с клиентом {} разорвано. Причина: {}", nickname, e.getMessage());
-        } catch (ClassNotFoundException e) {
-            logger.error("Ошибка десериализации сообщения от клиента {}: {}", nickname, e.getMessage());
         } finally {
             cleanup();
         }
     }
-
 
     private void handleMessage(Message message) {
         logger.info("Входящее сообщение [{} -> {}]: {}", message.sender(), message.recipient(), message.text());
@@ -73,14 +81,13 @@ public class ClientHandler implements Runnable {
 
     public synchronized void sendMessage(Message message) {
         try {
-            outputStream.writeObject(message);
-            outputStream.flush();
-        } catch (IOException e) {
-            logger.error("Ошибка отправки сообщения клиенту {}: {}", nickname, e.getMessage());
+            String json = gson.toJson(message);
+            writer.println(json); // Отправляем строку
+        } catch (Exception e) {
+            logger.error("Ошибка отправки JSON сообщения клиенту {}: {}", nickname, e.getMessage());
             cleanup();
         }
     }
-
 
     private void sendUserList() {
         String userList = String.join(",", server.getActiveUsers());
