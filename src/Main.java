@@ -1,112 +1,50 @@
-import java.util.List;
+import chat.client.ChatClient;
+import chat.server.ChatServer;
 import java.util.Scanner;
-import model.VisitorData;
+
 
 public class Main {
+
     public static void main(String[] args) {
-        DatabaseManager dbManager = new DatabaseManager();
+        try (Scanner scanner = new Scanner(System.in)) {
+            System.out.println("--- Запуск Консольного Чата ---");
+            System.out.println("Выберите режим:");
+            System.out.println("1. Запустить СЕРВЕР и КЛИЕНТ (для тестирования)");
+            System.out.println("2. Запустить только КЛИЕНТ (для подключения к удаленному серверу)");
+            System.out.print("Введите число (1 или 2): ");
 
-        if (!dbManager.isConnected()) {
-            System.out.println("Не удалось подключиться к базе данных. Программа завершена.");
-            return;
-        }
-
-        MusicManager musicManager = new MusicManager(dbManager.getConnection());
-        BookManager bookManager = new BookManager(dbManager.getConnection());
-        JSONParser jsonParser = new JSONParser();
-        Scanner scanner = new Scanner(System.in);
-
-        // Загружаем данные из JSON файла
-        List<VisitorData> visitorsData = jsonParser.parseVisitorsFromFile("books.json");
-
-        boolean running = true;
-
-        while (running) {
-            printMenu();
-            System.out.print("Выберите опцию: ");
-
-            try {
+            if (scanner.hasNextInt()) {
                 int choice = scanner.nextInt();
-                scanner.nextLine(); // consume newline
+                scanner.nextLine();
 
                 switch (choice) {
                     case 1:
-                        musicManager.getAllMusic();
+                        System.out.println("\n[СИСТЕМА]: Запуск сервера в фоновом потоке...");
+                        Thread serverThread = new Thread(() -> new ChatServer().start(), "ChatServer-Thread");
+                        serverThread.setDaemon(true);
+                        serverThread.start();
+                        Thread.sleep(500);
+
+                        System.out.println("[СИСТЕМА]: Запуск первого клиента...");
+                        ChatClient.main(new String[]{});
                         break;
+
                     case 2:
-                        musicManager.getMusicWithoutMT();
+                        System.out.println("\n[СИСТЕМА]: Запуск только клиента...");
+                        ChatClient.main(new String[]{});
                         break;
-                    case 3:
-                        addFavoriteSongInteractive(musicManager, scanner);
-                        break;
-                    case 4:
-                        if (visitorsData != null) {
-                            jsonParser.printVisitorsData(visitorsData);
-                            bookManager.importDataFromJSON(visitorsData);
-                        } else {
-                            System.out.println("Данные из JSON не загружены.");
-                        }
-                        break;
-                    case 5:
-                        bookManager.getBooksSortedByYear();
-                        break;
-                    case 6:
-                        bookManager.getBooksBefore2000();
-                        break;
-                    case 7:
-                        bookManager.addPersonalInfoAndBooks();
-                        break;
-                    case 8:
-                        bookManager.dropTables();
-                        break;
-                    case 9:
-                        bookManager.showAllVisitors();
-                        break;
-                    case 10:
-                        bookManager.showAllBooks();
-                        break;
-                    case 11:
-                        musicManager.showTableStructure();
-                        break;
-                    case 0:
-                        running = false;
-                        break;
+
                     default:
-                        System.out.println("Неверный выбор. Попробуйте снова.");
+                        System.out.println("Неверный выбор. Используйте 1 или 2.");
                 }
-            } catch (Exception e) {
-                System.out.println("Ошибка ввода: " + e.getMessage());
-                scanner.nextLine(); // очистка буфера
+            } else {
+                System.out.println("Неверный ввод. Ожидалось число.");
             }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            System.err.println("Поток был прерван.");
+        } catch (Exception e) {
+            System.err.println("Критическая ошибка при запуске: " + e.getMessage());
         }
-
-        // Очистка ресурсов
-        bookManager.closeScanner();
-        scanner.close();
-        dbManager.closeConnection();
-        System.out.println("Программа завершена.");
-    }
-
-    private static void printMenu() {
-        System.out.println("\n Меню управления музыкой и книгами ");
-        System.out.println("1. Показать все музыкальные композиции");
-        System.out.println("2. Показать композиции без букв 'm' и 't'");
-        System.out.println("3. Добавить любимую композицию");
-        System.out.println("4. Анализ books.json и импорт данных");
-        System.out.println("5. Показать книги отсортированные по году");
-        System.out.println("6. Показать книги до 2000 года");
-        System.out.println("7. Добавить информацию о себе и книги");
-        System.out.println("8. Удалить таблицы книг и посетителей");
-        System.out.println("9. Показать всех посетителей");
-        System.out.println("10. Показать все книги");
-        System.out.println("11. Показать структуру таблицы music");
-        System.out.println("0. Выход");
-    }
-
-    private static void addFavoriteSongInteractive(MusicManager musicManager, Scanner scanner) {
-        System.out.print("Введите название композиции: ");
-        String name = scanner.nextLine();
-
-        musicManager.addFavoriteSong(name);
     }
 }

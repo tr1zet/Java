@@ -4,13 +4,13 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.example</groupId>
-    <artifactId>BookMusicManager</artifactId>
-    <version>1.0</version>
+    <groupId>com.neonbite</groupId>
+    <artifactId>sockets-chat</artifactId>
+    <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>Book Music Manager</name>
-    <description>Application for managing music tracks and books with database integration</description>
+    <name>Console Chat Application</name>
+    <description>Console Client-Server Chat with Logback Logging</description>
     <url>https://github.com/tr1zet/Java</url>
 
     <properties>
@@ -23,7 +23,6 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-        <!-- Sonar properties -->
         <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
         <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
         <sonar.language>java</sonar.language>
@@ -31,21 +30,29 @@
     </properties>
 
     <dependencies>
-        <!-- SQLite Database -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>2.0.11</version>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.4.14</version>
+        </dependency>
+
         <dependency>
             <groupId>org.xerial</groupId>
             <artifactId>sqlite-jdbc</artifactId>
             <version>3.42.0.0</version>
         </dependency>
 
-        <!-- JSON Processing -->
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
             <version>2.10.1</version>
         </dependency>
 
-        <!-- Lombok for reducing boilerplate code -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
@@ -53,7 +60,6 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- JUnit for testing -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
@@ -64,8 +70,8 @@
 
     <build>
         <sourceDirectory>src</sourceDirectory>
+
         <plugins>
-            <!-- Compiler Plugin -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -83,7 +89,6 @@
                 </configuration>
             </plugin>
 
-            <!-- Surefire Plugin for unit tests -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
@@ -93,7 +98,6 @@
                 </configuration>
             </plugin>
 
-            <!-- JaCoCo for code coverage -->
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
@@ -114,7 +118,6 @@
                 </executions>
             </plugin>
 
-            <!-- Shade Plugin for executable JAR -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
@@ -136,7 +139,6 @@
                 </executions>
             </plugin>
 
-            <!-- SonarQube Scanner -->
             <plugin>
                 <groupId>org.sonarsource.scanner.maven</groupId>
                 <artifactId>sonar-maven-plugin</artifactId>
@@ -153,15 +155,14 @@
             </activation>
             <properties>
                 <sonar.coverage.exclusions>
-                    **/model/**,
-                    **/Main.java,
-                    **/config.properties
+                    **/chat/model/**,
+                    **/chat/server/ChatServer.java,
+                    **/chat/client/ChatClient.java
                 </sonar.coverage.exclusions>
                 <sonar.cpd.exclusions>
-                    **/model/**
+                    **/chat/model/**
                 </sonar.cpd.exclusions>
             </properties>
         </profile>
     </profiles>
-
 </project>
